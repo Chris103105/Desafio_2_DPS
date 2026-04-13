@@ -1,155 +1,102 @@
 // componentes/FormularioPieza.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; 
-import DateTimePicker from '@react-native-community/datetimepicker'; // Importamos el calendario
+import { View, Text, TextInput, Alert, TouchableOpacity, Button } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker'; // Importamos el Picker
+import { estilosGrupales } from '../estilos';
 
 export default function FormularioPieza({ alGuardar, alCancelar }) {
-  const [nombrePieza, setNombrePieza] = useState('Bujía');
-  const [marca, setMarca] = useState('');
-  
-  // --- NUEVOS ESTADOS ---
-  const [noSerie, setNoSerie] = useState('');
-  const [precio, setPrecio] = useState('');
-  const [fecha, setFecha] = useState(new Date());
+  // El estado de textoPieza ahora inicia con la primera opción del Picker
+  const [textoPieza, setTextoPieza] = useState('Bujía'); 
+  const [textoMarca, setTextoMarca] = useState('');
+  const [textoNoSerie, setTextoNoSerie] = useState('');
+  const [textoPrecio, setTextoPrecio] = useState('');
+  const [fechaObjeto, setFechaObjeto] = useState(new Date()); 
+  const [fechaTexto, setFechaTexto] = useState('Seleccionar fecha'); 
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
 
-  const manejarCambioFecha = (event, fechaSeleccionada) => {
-    setMostrarCalendario(false); // Ocultamos el calendario al elegir
+  const tieneNumeros = (texto) => /\d/.test(texto);
+
+  const alCambiarFecha = (event, fechaSeleccionada) => {
+    setMostrarCalendario(false);
     if (fechaSeleccionada) {
-      setFecha(fechaSeleccionada);
+      setFechaObjeto(fechaSeleccionada);
+      setFechaTexto(fechaSeleccionada.toLocaleDateString());
     }
   };
 
-  const manejarGuardar = () => {
-    // Actualizamos el objeto para que envíe todos los datos nuevos
-    const nueva = {
+  const validarYGuardar = () => {
+    if (!textoPieza || !textoMarca || !textoNoSerie || !textoPrecio || fechaTexto === 'Seleccionar fecha') {
+      return Alert.alert("Campos vacíos", "Por favor, completa toda la información.");
+    }
+    if (tieneNumeros(textoMarca)) {
+      return Alert.alert("Error", "La marca no puede contener números.");
+    }
+
+    const nuevaPieza = {
       id: Date.now().toString(),
-      pieza: nombrePieza,
-      marca: marca,
-      noSerie: noSerie,
-      precio: precio,
-      fechaCambio: fecha.toLocaleDateString() // Convierte la fecha a texto (ej: 12/04/2026)
+      pieza: textoPieza, // Toma el valor del Picker
+      marca: textoMarca,
+      noSerie: textoNoSerie,
+      precio: textoPrecio,
+      fechaCambio: fechaTexto,
+      fechaParaOrdenar: fechaObjeto
     };
-    alGuardar(nueva);
+    
+    alGuardar(nuevaPieza);
   };
 
   return (
-    <View style={styles.formulario}>
-      <Text style={styles.titulo}>Nueva Pieza</Text>
+    <View style={estilosGrupales.contenedor}>
+      <Text style={estilosGrupales.tituloSecundario}>Nueva Pieza</Text>
+      
+      {/* --- AQUÍ ESTÁ EL PICKER --- */}
+      <View style={estilosGrupales.fila}>
+        <Text style={estilosGrupales.etiqueta}>Pieza</Text>
+        <View style={[estilosGrupales.input, { padding: 0 }]}>
+          <Picker
+            selectedValue={textoPieza}
+            onValueChange={(itemValue) => setTextoPieza(itemValue)}
+            dropdownIconColor="#C0D0EF"
+            style={{ color: '#C0D0EF', height: 50 }}
+          >
+            <Picker.Item label="Bujía" value="Bujía" />
+            <Picker.Item label="Filtro de Aceite" value="Filtro de Aceite" />
+            <Picker.Item label="Batería" value="Batería" />
+            <Picker.Item label="Neumáticos" value="Neumáticos" />
+            <Picker.Item label="Pastillas de Freno" value="Pastillas de Freno" />
+            <Picker.Item label="Motor" value="Motor" />
+            <Picker.Item label="Transmisión de caja" value="Transmisión de caja" />
+            <Picker.Item label="Radiador" value="Radiador" />
+            <Picker.Item label="Filtro de Aire" value="Filtro de Aire" />
+            <Picker.Item label="Suspensión" value="Suspensión" />
 
-      <Text style={styles.etiqueta}>¿Qué pieza es?</Text>
-      <View style={styles.contenedorPicker}>
-        <Picker
-          selectedValue={nombrePieza}
-          onValueChange={(item) => setNombrePieza(item)}
-        >
-          <Picker.Item label="Bujía" value="Bujía" />
-          <Picker.Item label="Batería" value="Batería" />
-          <Picker.Item label="Filtro" value="Filtro" />
-        </Picker>
+          </Picker>
+        </View>
       </View>
 
-      <Text style={styles.etiqueta}>Marca</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Ej: Bosch" 
-        value={marca} 
-        onChangeText={setMarca} 
-      />
+      <View style={estilosGrupales.fila}><Text style={estilosGrupales.etiqueta}>Marca</Text><TextInput style={estilosGrupales.input} value={textoMarca} onChangeText={setTextoMarca} placeholder="Ej: Bosch" placeholderTextColor="#668DC0" /></View>
+      <View style={estilosGrupales.fila}><Text style={estilosGrupales.etiqueta}>No. Serie</Text><TextInput style={estilosGrupales.input} value={textoNoSerie} onChangeText={setTextoNoSerie} placeholder="Ej: 12345" placeholderTextColor="#668DC0" /></View>
+      <View style={estilosGrupales.fila}><Text style={estilosGrupales.etiqueta}>Precio</Text><TextInput style={estilosGrupales.input} value={textoPrecio} onChangeText={setTextoPrecio} keyboardType="numeric" placeholder="Ej: 25.50" placeholderTextColor="#668DC0" /></View>
+      
+      <View style={estilosGrupales.fila}>
+        <Text style={estilosGrupales.etiqueta}>Fecha de Cambio</Text>
+        <TouchableOpacity style={estilosGrupales.botonFecha} onPress={() => setMostrarCalendario(true)}>
+          <Text style={estilosGrupales.textoFecha}>{fechaTexto}</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* --- NUEVO: NÚMERO DE SERIE --- */}
-      <Text style={styles.etiqueta}>Número de Serie</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Ej: 12345678" 
-        value={noSerie} 
-        onChangeText={setNoSerie} 
-      />
+      {mostrarCalendario && <DateTimePicker value={fechaObjeto} mode="date" onChange={alCambiarFecha} />}
 
-      {/* --- NUEVO: PRECIO --- */}
-      <Text style={styles.etiqueta}>Precio</Text>
-      <TextInput 
-        style={styles.input} 
-        placeholder="Ej: 25.50" 
-        value={precio} 
-        onChangeText={setPrecio} 
-        keyboardType="numeric" // Abre el teclado de números del celular
-      />
-
-      {/* --- NUEVO: FECHA CON CALENDARIO --- */}
-      <Text style={styles.etiqueta}>Fecha de Cambio</Text>
-      <TouchableOpacity 
-        style={styles.botonFecha} 
-        onPress={() => setMostrarCalendario(true)}
-      >
-        <Text style={styles.textoFecha}>{fecha.toLocaleDateString()}</Text>
-      </TouchableOpacity>
-
-      {/* El calendario solo aparece si la variable mostrarCalendario es verdadera */}
-      {mostrarCalendario && (
-        <DateTimePicker 
-          value={fecha} 
-          mode="date" 
-          display="default"
-          onChange={manejarCambioFecha} 
-        />
-      )}
-
-      <View style={styles.botones}>
-        <Button title="Guardar" onPress={manejarGuardar} color="#A3B8A8" />
-        <Button title="Cancelar" onPress={alCancelar} color="#88928A" />
+      {/* --- AQUÍ ESTÁN LOS BUTTON NATIVOS --- */}
+      <View style={estilosGrupales.filaBotones}>
+        <View style={{ flex: 0.48 }}>
+          <Button title="Guardar" onPress={validarYGuardar} color="#668DC0" />
+        </View>
+        <View style={{ flex: 0.48 }}>
+          <Button title="Cancelar" onPress={alCancelar} color="#304A6E" />
+        </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  formulario: { 
-    marginTop: 20 
-  },
-  titulo: { 
-    fontSize: 22, 
-    fontWeight: 'bold', 
-    marginBottom: 20, 
-    color: '#4A554D' 
-  },
-  etiqueta: { 
-    fontSize: 16, 
-    marginBottom: 5, 
-    color: '#6B756E' 
-  },
-  contenedorPicker: { 
-    borderWidth: 1, 
-    borderColor: '#E1E6E2', 
-    borderRadius: 10, 
-    marginBottom: 15,
-    backgroundColor: '#FFFFFF'
-  },
-  input: { 
-    borderWidth: 1, 
-    borderColor: '#E1E6E2', 
-    borderRadius: 10, 
-    padding: 10, 
-    marginBottom: 15,
-    backgroundColor: '#FFFFFF'
-  },
-  botonFecha: {
-    borderWidth: 1, 
-    borderColor: '#E1E6E2', 
-    borderRadius: 10, 
-    padding: 12, 
-    marginBottom: 20,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center'
-  },
-  textoFecha: {
-    fontSize: 16,
-    color: '#4A554D'
-  },
-  botones: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-around',
-    marginTop: 10
-  }
-});
