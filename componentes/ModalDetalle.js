@@ -12,12 +12,18 @@ export default function ModalDetalle({ visible, pieza, alCerrar }) {
         <View style={styles.cajaModal}>
           <Text style={styles.titulo}>Detalles Registrados</Text>
           
+          {/* Aquí mostramos toda la información de la pieza */}
           <Text style={styles.texto}>Pieza: {pieza.pieza}</Text>
           <Text style={styles.texto}>Marca: {pieza.marca}</Text>
+          
+          {/* --- NUEVOS CAMPOS AGREGADOS --- */}
+          <Text style={styles.texto}>No. de Serie: {pieza.noSerie}</Text>
+          <Text style={styles.texto}>Precio: ${pieza.precio}</Text>
+          {/* ------------------------------- */}
+
           <Text style={styles.texto}>Fecha de cambio: {pieza.fechaCambio}</Text>
 
           <View style={styles.botonCerrar}>
-         
             <Button title="Cerrar ventana" onPress={alCerrar} color="#88928A" />
           </View>
         </View>

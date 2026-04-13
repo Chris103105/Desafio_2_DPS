@@ -1,19 +1,35 @@
 // componentes/FormularioPieza.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; 
+import DateTimePicker from '@react-native-community/datetimepicker'; // Importamos el calendario
 
 export default function FormularioPieza({ alGuardar, alCancelar }) {
   const [nombrePieza, setNombrePieza] = useState('Bujía');
   const [marca, setMarca] = useState('');
+  
+  // --- NUEVOS ESTADOS ---
+  const [noSerie, setNoSerie] = useState('');
+  const [precio, setPrecio] = useState('');
+  const [fecha, setFecha] = useState(new Date());
+  const [mostrarCalendario, setMostrarCalendario] = useState(false);
+
+  const manejarCambioFecha = (event, fechaSeleccionada) => {
+    setMostrarCalendario(false); // Ocultamos el calendario al elegir
+    if (fechaSeleccionada) {
+      setFecha(fechaSeleccionada);
+    }
+  };
 
   const manejarGuardar = () => {
-    // Creamos un objeto simple con lo que escribió el usuario
+    // Actualizamos el objeto para que envíe todos los datos nuevos
     const nueva = {
       id: Date.now().toString(),
       pieza: nombrePieza,
       marca: marca,
-      fechaCambio: new Date().toLocaleDateString() // Fecha de hoy por default para no complicar el código
+      noSerie: noSerie,
+      precio: precio,
+      fechaCambio: fecha.toLocaleDateString() // Convierte la fecha a texto (ej: 12/04/2026)
     };
     alGuardar(nueva);
   };
@@ -42,8 +58,45 @@ export default function FormularioPieza({ alGuardar, alCancelar }) {
         onChangeText={setMarca} 
       />
 
+      {/* --- NUEVO: NÚMERO DE SERIE --- */}
+      <Text style={styles.etiqueta}>Número de Serie</Text>
+      <TextInput 
+        style={styles.input} 
+        placeholder="Ej: 12345678" 
+        value={noSerie} 
+        onChangeText={setNoSerie} 
+      />
+
+      {/* --- NUEVO: PRECIO --- */}
+      <Text style={styles.etiqueta}>Precio</Text>
+      <TextInput 
+        style={styles.input} 
+        placeholder="Ej: 25.50" 
+        value={precio} 
+        onChangeText={setPrecio} 
+        keyboardType="numeric" // Abre el teclado de números del celular
+      />
+
+      {/* --- NUEVO: FECHA CON CALENDARIO --- */}
+      <Text style={styles.etiqueta}>Fecha de Cambio</Text>
+      <TouchableOpacity 
+        style={styles.botonFecha} 
+        onPress={() => setMostrarCalendario(true)}
+      >
+        <Text style={styles.textoFecha}>{fecha.toLocaleDateString()}</Text>
+      </TouchableOpacity>
+
+      {/* El calendario solo aparece si la variable mostrarCalendario es verdadera */}
+      {mostrarCalendario && (
+        <DateTimePicker 
+          value={fecha} 
+          mode="date" 
+          display="default"
+          onChange={manejarCambioFecha} 
+        />
+      )}
+
       <View style={styles.botones}>
-        {/* Usamos Button nativo como pide la rúbrica */}
         <Button title="Guardar" onPress={manejarGuardar} color="#A3B8A8" />
         <Button title="Cancelar" onPress={alCancelar} color="#88928A" />
       </View>
@@ -52,10 +105,51 @@ export default function FormularioPieza({ alGuardar, alCancelar }) {
 }
 
 const styles = StyleSheet.create({
-  formulario: { marginTop: 20 },
-  titulo: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, color: '#4A554D' },
-  etiqueta: { fontSize: 16, marginBottom: 5, color: '#6B756E' },
-  contenedorPicker: { borderWidth: 1, borderColor: '#E1E6E2', borderRadius: 10, marginBottom: 15 },
-  input: { borderWidth: 1, borderColor: '#E1E6E2', borderRadius: 10, padding: 10, marginBottom: 20 },
-  botones: { flexDirection: 'row', justifyContent: 'space-around' }
+  formulario: { 
+    marginTop: 20 
+  },
+  titulo: { 
+    fontSize: 22, 
+    fontWeight: 'bold', 
+    marginBottom: 20, 
+    color: '#4A554D' 
+  },
+  etiqueta: { 
+    fontSize: 16, 
+    marginBottom: 5, 
+    color: '#6B756E' 
+  },
+  contenedorPicker: { 
+    borderWidth: 1, 
+    borderColor: '#E1E6E2', 
+    borderRadius: 10, 
+    marginBottom: 15,
+    backgroundColor: '#FFFFFF'
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#E1E6E2', 
+    borderRadius: 10, 
+    padding: 10, 
+    marginBottom: 15,
+    backgroundColor: '#FFFFFF'
+  },
+  botonFecha: {
+    borderWidth: 1, 
+    borderColor: '#E1E6E2', 
+    borderRadius: 10, 
+    padding: 12, 
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center'
+  },
+  textoFecha: {
+    fontSize: 16,
+    color: '#4A554D'
+  },
+  botones: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around',
+    marginTop: 10
+  }
 });
