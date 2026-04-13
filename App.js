@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native'; // <-- Importamos Alert
 import TarjetaPieza from './componentes/TarjetaPieza';
 import FormularioPieza from './componentes/FormularioPieza';
-import ModalDetalle from './componentes/ModalDetalle'; // Importamos el Modal
+import ModalDetalle from './componentes/ModalDetalle';
 
 export default function App() {
   const [piezas, setPiezas] = useState([]);
   const [mostrandoFormulario, setMostrandoFormulario] = useState(false);
-  
-  // --- NUEVOS ESTADOS PARA EL MODAL ---
   const [piezaElegida, setPiezaElegida] = useState(null); 
   const [verModal, setVerModal] = useState(false);
 
@@ -20,6 +18,25 @@ export default function App() {
   const abrirDetalles = (pieza) => {
     setPiezaElegida(pieza);
     setVerModal(true);
+  };
+
+  // --- NUEVA FUNCIÓN DEL INTEGRANTE 1: BORRADO SEGURO ---
+  const confirmarEliminacion = (idABorrar) => {
+    Alert.alert(
+      "Eliminar Pieza",
+      "¿Estás seguro de que deseas borrar este registro?",
+      [
+        { text: "Cancelar", style: "cancel" }, // Botón inofensivo
+        { 
+          text: "Sí, borrar", 
+          style: "destructive", // Se pone rojo en iOS
+          onPress: () => {
+            // Filtramos la lista para dejar todas las piezas MENOS la que queremos borrar
+            setPiezas(piezas.filter(item => item.id !== idABorrar));
+          } 
+        }
+      ]
+    );
   };
 
   return (
@@ -43,14 +60,14 @@ export default function App() {
             renderItem={({ item }) => (
               <TarjetaPieza 
                 pieza={item} 
-                alTocar={() => abrirDetalles(item)} // <-- Le pasamos la función al tocar
+                alTocar={() => abrirDetalles(item)}
+                alEliminar={() => confirmarEliminacion(item.id)} // <-- Conectamos el botón
               />
             )}
           />
         </View>
       )}
 
-      {/* --- AQUI LLAMAMOS AL MODAL --- */}
       <ModalDetalle 
         visible={verModal} 
         pieza={piezaElegida} 
