@@ -1,85 +1,83 @@
+// App.js
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native'; // <-- Importamos Alert
-import TarjetaPieza from './componentes/TarjetaPieza';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+
+// Importamos nuestros componentes "ayudantes"
 import FormularioPieza from './componentes/FormularioPieza';
+import TarjetaPieza from './componentes/TarjetaPieza';
 import ModalDetalle from './componentes/ModalDetalle';
 
+// 1. IMPORTAMOS TUS ESTILOS CENTRALIZADOS
+import { estilosGrupales } from './estilos';
+
 export default function App() {
-  const [piezas, setPiezas] = useState([]);
-  const [mostrandoFormulario, setMostrandoFormulario] = useState(false);
-  const [piezaElegida, setPiezaElegida] = useState(null); 
-  const [verModal, setVerModal] = useState(false);
+  const [listaDePiezas, setListaDePiezas] = useState([]);
+  const [pantallaActual, setPantallaActual] = useState('lista'); 
+  const [modalDetalle, setModalDetalle] = useState(false);
+  const [piezaSeleccionada, setPiezaSeleccionada] = useState(null);
 
-  const agregarPieza = (nueva) => {
-    setPiezas([...piezas, nueva]);
-    setMostrandoFormulario(false);
+  const agregarPiezaALaLista = (nuevaPieza) => {
+    const nuevaLista = [...listaDePiezas, nuevaPieza].sort((a, b) => b.fechaParaOrdenar - a.fechaParaOrdenar);
+    setListaDePiezas(nuevaLista);
+    setPantallaActual('lista'); 
   };
 
-  const abrirDetalles = (pieza) => {
-    setPiezaElegida(pieza);
-    setVerModal(true);
+  const eliminarPieza = (id) => {
+    setListaDePiezas(listaDePiezas.filter(p => p.id !== id));
   };
 
-  // --- NUEVA FUNCIÓN DEL INTEGRANTE 1: BORRADO SEGURO ---
-  const confirmarEliminacion = (idABorrar) => {
-    Alert.alert(
-      "Eliminar Pieza",
-      "¿Estás seguro de que deseas borrar este registro?",
-      [
-        { text: "Cancelar", style: "cancel" }, // Botón inofensivo
-        { 
-          text: "Sí, borrar", 
-          style: "destructive", // Se pone rojo en iOS
-          onPress: () => {
-            // Filtramos la lista para dejar todas las piezas MENOS la que queremos borrar
-            setPiezas(piezas.filter(item => item.id !== idABorrar));
-          } 
-        }
-      ]
-    );
-  };
-
-  return (
-    <View style={styles.contenedor}>
-      {mostrandoFormulario ? (
+  // --- RENDERIZADO DEL FORMULARIO ---
+  if (pantallaActual === 'formulario') {
+    return (
+      <View style={estilosGrupales.contenedor}>
         <FormularioPieza 
-          alGuardar={agregarPieza} 
-          alCancelar={() => setMostrandoFormulario(false)} 
+          alGuardar={agregarPiezaALaLista} 
+          alCancelar={() => setPantallaActual('lista')} 
         />
-      ) : (
-        <View style={{ flex: 1 }}>
-          <Text style={styles.titulo}>Mi Historial</Text>
-          
-          <TouchableOpacity style={styles.boton} onPress={() => setMostrandoFormulario(true)}>
-            <Text style={styles.textoBoton}>+ Agregar Pieza</Text>
-          </TouchableOpacity>
+      </View>
+    );
+  }
 
-          <FlatList
-            data={piezas}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TarjetaPieza 
-                pieza={item} 
-                alTocar={() => abrirDetalles(item)}
-                alEliminar={() => confirmarEliminacion(item.id)} // <-- Conectamos el botón
-              />
-            )}
-          />
+  // --- RENDERIZADO DE LA LISTA PRINCIPAL ---
+  return (
+    <View style={estilosGrupales.contenedor}>
+      
+      {/* Nuevo encabezado más elegante */}
+      <View style={estilosGrupales.encabezado}>
+        <Text style={estilosGrupales.tituloPrincipal}>Piezas</Text>
+        <TouchableOpacity style={estilosGrupales.botonAdd} onPress={() => setPantallaActual('formulario')}>
+          <Text style={estilosGrupales.textoBotonAdd}>+ Agregar</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* AQUÍ ESTÁ EL ICONO DE LA TUERCA Y EL MENSAJE VACÍO */}
+      {listaDePiezas.length === 0 ? (
+        <View style={estilosGrupales.contenedorVacio}>
+          <Text style={estilosGrupales.iconoVacio}>⚙️</Text>
+          <Text style={estilosGrupales.textoVacio}>No hay piezas registradas.</Text>
+          <Text style={estilosGrupales.subtextoVacio}>Toca en "+ Agregar" para empezar.</Text>
         </View>
+      ) : (
+        <FlatList
+          data={listaDePiezas}
+          keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TarjetaPieza 
+              pieza={item} 
+              alTocar={() => { setPiezaSeleccionada(item); setModalDetalle(true); }}
+              alEliminar={() => eliminarPieza(item.id)}
+            />
+          )}
+        />
       )}
 
+      {/* Aquí llamamos al Modal */}
       <ModalDetalle 
-        visible={verModal} 
-        pieza={piezaElegida} 
-        alCerrar={() => setVerModal(false)} 
+        visible={modalDetalle} 
+        pieza={piezaSeleccionada} 
+        alCerrar={() => setModalDetalle(false)} 
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  contenedor: { flex: 1, backgroundColor: '#F7F9F7', paddingTop: 60, paddingHorizontal: 20 },
-  titulo: { fontSize: 28, fontWeight: 'bold', color: '#4A554D', textAlign: 'center', marginBottom: 20 },
-  boton: { backgroundColor: '#A3B8A8', padding: 15, borderRadius: 12, alignItems: 'center', marginBottom: 20 },
-  textoBoton: { color: 'white', fontWeight: 'bold' }
-});
